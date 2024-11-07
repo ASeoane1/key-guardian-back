@@ -1,16 +1,23 @@
 import argparse
+import yaml
 from api_controller import ApiController
 
-def parse_arguments():
-    parser = argparse.ArgumentParser(description='Start the API server.')
-    parser.add_argument('--cred_path', type=str, required=True, help='Path to the Firebase admin credentials file')
-    parser.add_argument('--pyrebase_config_path', type=str, required=True, help='Path to the Pyrebase configuration file')
-    parser.add_argument('--port', type=int, default=5000, help='Port number to run Flask server on (default: 5000)')
-    return parser.parse_args()
+def load_config(config_file):
+    with open(config_file, 'r') as file:
+        config = yaml.safe_load(file)
+    return config
 
 if __name__ == '__main__':
-    args = parse_arguments()
+    parser = argparse.ArgumentParser(description='Start the API server.')
+    parser.add_argument('config_file', type=str, help='Path to the configuration file')
+    args = parser.parse_args()
+
+    config = load_config(args.config_file)
 
     # Initialize API
-    api_controller = ApiController(args.cred_path, args.pyrebase_config_path)
-    api_controller.start_server(port=args.port)
+    api_controller = ApiController(
+        config['cred_path'],
+        config['pyrebase_config_path'],
+        config['jwt_secret_key']
+    )
+    api_controller.start_server(port=config.get('port', 5000))
